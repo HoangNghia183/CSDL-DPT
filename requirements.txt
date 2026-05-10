@@ -1,0 +1,7 @@
+fastapi==0.136.1
+uvicorn==0.46.0
+python-multipart==0.0.27
+tensorflow==2.21.0
+numpy==2.4.4
+opencv-python==4.13.0.92
+faiss-cpu==1.13.2
