@@ -2,8 +2,9 @@ import os
 import requests
 import time
 import re
+import cv2
 
-# --- CẤU HÌNH THÔNG SỐ ---
+# Thông số cấu hình
 API_KEY = "V8joi3VX3FGN5BBEEOJJTxV7rheTagMozGHJ3SLWvcIGAKDReQ42RYsp" 
 QUERY_TERMS = [
     "flowers",
@@ -18,7 +19,7 @@ QUERY_TERMS = [
     "tulip",
 ]
 TOTAL_VIDEOS_NEEDED = 550
-VIDEOS_PER_PAGE = 80 # Pexels cho tối đa 80 kết quả/trang
+VIDEOS_PER_PAGE = 80
 OUTPUT_FOLDER = "pexels_dataset"
 MAX_RETRIES = 4
 SEARCH_TIMEOUT = 25
@@ -26,7 +27,7 @@ DOWNLOAD_TIMEOUT = 60
 BACKOFF_SECONDS = 2
 MAX_PAGES_PER_TERM = 30
 
-# --- KHỞI TẠO ---
+# Khởi tạo
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = os.path.join(BASE_DIR, OUTPUT_FOLDER)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -72,13 +73,29 @@ def request_with_retry(url, headers=None, stream=False, timeout=30, max_retries=
 
     raise last_error
 
+
+def get_video_duration_seconds(video_path):
+    capture = cv2.VideoCapture(video_path)
+    if not capture.isOpened():
+        capture.release()
+        return None
+
+    fps = capture.get(cv2.CAP_PROP_FPS)
+    frame_count = capture.get(cv2.CAP_PROP_FRAME_COUNT)
+    capture.release()
+
+    if fps <= 0 or frame_count <= 0:
+        return None
+
+    return frame_count / fps
+
 print(
     f"Bắt đầu tải {TOTAL_VIDEOS_NEEDED} video với các chủ đề: {', '.join(QUERY_TERMS)}..."
 )
 if downloaded_count > 0:
     print(f"Đã có sẵn {downloaded_count} video, sẽ tiếp tục tải phần còn thiếu...")
 
-# --- VÒNG LẶP LẤY DỮ LIỆU ---
+# Vòng lặp thu thập dữ liệu
 for query in QUERY_TERMS:
     if downloaded_count >= TOTAL_VIDEOS_NEEDED:
         break
@@ -156,9 +173,14 @@ for query in QUERY_TERMS:
                                 f.write(chunk)
 
                     os.replace(tmp_file_name, file_name)
+                    duration_seconds = get_video_duration_seconds(file_name)
 
                     downloaded_count += 1
                     seen_ids.add(video_id)
+                    if duration_seconds is not None:
+                        print(f"Độ dài video: {duration_seconds:.2f} giây")
+                    else:
+                        print("Không đọc được độ dài video.")
                     time.sleep(1)
 
                 except Exception as e:
@@ -173,4 +195,4 @@ if downloaded_count < TOTAL_VIDEOS_NEEDED:
         f"\nChưa đủ {TOTAL_VIDEOS_NEEDED}. Hiện có {downloaded_count} video duy nhất sau khi đã thử hết từ khóa."
     )
 
-print(f"\nTuyệt vời! Đã tải thành công {downloaded_count} video vào thư mục '{OUTPUT_DIR}'.")
+print(f"\nĐã tải thành công {downloaded_count} video vào thư mục '{OUTPUT_DIR}'.")

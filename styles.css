@@ -136,6 +136,48 @@ h1 {
   gap: 20px;
 }
 
+.intermediate-results {
+  margin-top: 28px;
+}
+
+.intermediate-results h2 {
+  margin: 0 0 14px;
+  font-size: 1.2rem;
+}
+
+.intermediate-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.intermediate-card {
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid var(--panel-border);
+  background: rgba(15, 23, 42, 0.58);
+  box-shadow: var(--shadow);
+}
+
+.intermediate-card p {
+  margin: 0;
+}
+
+.intermediate-card p + p {
+  margin-top: 8px;
+  color: var(--muted);
+}
+
+.intermediate-name {
+  margin-top: 8px !important;
+  color: var(--text) !important;
+  font-weight: 700;
+}
+
+.intermediate-path {
+  word-break: break-word;
+}
+
 .result-card {
   overflow: hidden;
   border-radius: 22px;
@@ -177,6 +219,10 @@ h1 {
   }
 
   .results-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .intermediate-list {
     grid-template-columns: 1fr;
   }
 }

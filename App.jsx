@@ -4,6 +4,7 @@ import './styles.css';
 function App() {
   const [file, setFile] = useState(null);
   const [results, setResults] = useState([]);
+  const [intermediateResults, setIntermediateResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -30,6 +31,7 @@ function App() {
 
       const data = await response.json();
       setResults(data.results || []);
+      setIntermediateResults(data.intermediate_results || []);
     } catch (fetchError) {
       setError(`Không thể tìm kiếm: ${fetchError.message}`);
     } finally {
@@ -65,17 +67,34 @@ function App() {
 
       <div className="results-grid">
         {results.map((res, index) => (
-          <article key={index} className="result-card">
+          <article key={`${res.path}-${res.name}-${index}`} className="result-card">
             <div className="result-meta">
               <p className="result-name">{res.name}</p>
               <p className="result-score">Độ tương đồng: {(res.score * 100).toFixed(2)}%</p>
             </div>
-            <video controls preload="metadata">
-              <source src={`http://localhost:8000/${res.path}`} type="video/mp4" />
+            <video key={res.path} controls preload="metadata">
+              <source key={res.path} src={`http://localhost:8000/${res.path}`} type="video/mp4" />
             </video>
           </article>
         ))}
       </div>
+
+      {intermediateResults.length > 0 ? (
+        <section className="intermediate-results">
+          <h2>Thông số trung gian</h2>
+          <div className="intermediate-list">
+            {intermediateResults.map((item) => (
+              <article key={`${item.id}-${item.rank}`} className="intermediate-card">
+                <p>Hạng {item.rank}</p>
+                <p>ID vector: {item.id}</p>
+                <p className="intermediate-name">{item.name}</p>
+                <p className="intermediate-path">{item.path}</p>
+                <p>Độ tương đồng: {item.similarity_percent.toFixed(2)}%</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

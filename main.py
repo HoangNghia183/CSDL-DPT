@@ -16,7 +16,7 @@ INDEX_PATH = os.path.join(BASE_DIR, "vector_db.index")
 
 app = FastAPI()
 
-# Cho phép React (Vite) gọi API
+# Cho phép React gọi API
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 app.mount("/pexels_dataset", StaticFiles(directory=DATASET_DIR), name="pexels_dataset")
 
@@ -55,12 +55,27 @@ async def search_video(file: UploadFile = File(...)):
     conn = sqlite3.connect("multimedia_vdb.db")
     cursor = conn.cursor()
     results = []
+    intermediate_results = []
     for i, idx in enumerate(indices[0]):
         cursor.execute("SELECT file_name, file_path FROM video WHERE id = ?", (int(idx),))
         row = cursor.fetchone()
         if row:
-            results.append({"name": row[0], "path": row[1], "score": float(scores[0][i])})
+            score = float(scores[0][i])
+            result_item = {
+                "name": row[0],
+                "path": row[1],
+                "score": score,
+            }
+            results.append(result_item)
+            intermediate_results.append({
+                "rank": i + 1,
+                "id": int(idx),
+                "name": row[0],
+                "path": row[1],
+                "score": score,
+                "similarity_percent": round(score * 100, 2),
+            })
     
     conn.close()
     os.remove(temp_path) # Xóa file tạm
-    return {"results": results}
+    return {"results": results, "intermediate_results": intermediate_results}
